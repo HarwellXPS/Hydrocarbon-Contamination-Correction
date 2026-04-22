@@ -7,3 +7,5 @@ How to use:
 2. Enter each element's line, binding energy, integrated peak area (Shirley-background-subtracted), and RSF
 3. Select the C 1s adventitious carbon peak using the radio button
 4. Hit Calculate Correction — the results table shows apparent vs. corrected compositions, per-element IMFPs, overlayer thickness, and the change in atom% for each element
+
+Versions for use with React (jsx file) and HTML5 are included
