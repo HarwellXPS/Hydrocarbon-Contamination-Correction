@@ -1,0 +1,339 @@
+import { useState, useCallback } from "react";
+
+// ─── Embedded HarwellXPS Logo (base64) ────────────────────────────────────────
+const LOGO_B64 = "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";
+
+// ─── Constants ─────────────────────────────────────────────────────────────────
+const LAMBDA_C1S_C = 3.5;
+const XRAY_ENERGIES = {
+  "Al Kα (1486.6 eV)": 1486.6,
+  "Mg Kα (1253.6 eV)": 1253.6,
+};
+const imfpOrganic = (Ekin) => 0.016 * Math.pow(Ekin, 0.7608);
+
+// ─── HarwellXPS colours ─────────────────────────────────────────────────────
+const C = {
+  bg:        "#0e1218",
+  surface:   "#141a22",
+  border:    "#1e2a38",
+  borderLt:  "#243346",
+  teal:      "#00c9a7",
+  tealDim:   "#008f77",
+  blue:      "#3b8bdf",
+  blueDim:   "#1f5ca8",
+  text:      "#dce7f0",
+  textMid:   "#7da8c7",
+  textDim:   "#4a6880",
+  accent:    "#00e5c4",
+  accentBg:  "rgba(0,201,167,0.09)",
+  red:       "#f06060",
+  green:     "#4ade80",
+};
+
+// ─── Default element dataset (LaAlO3 from Lea 2010) ─────────────────────────
+const DEFAULT_ELEMENTS = [
+  { id: 1, name: "C",  line: "1s", be: 285.0,  area: 37869,  rsf: 1.000, isCarbon: true  },
+  { id: 2, name: "O",  line: "1s", be: 532.0,  area: 257087, rsf: 2.930, isCarbon: false },
+  { id: 3, name: "Al", line: "2p", be: 74.0,   area: 33768,  rsf: 0.537, isCarbon: false },
+];
+let nextId = 4;
+const fmt2 = (v) => (v == null || isNaN(v) ? "—" : v.toFixed(2));
+const fmt3 = (v) => (v == null || isNaN(v) ? "—" : v.toFixed(3));
+
+// ─── Main ───────────────────────────────────────────────────────────────────
+export default function XPSApp() {
+  const [elements, setElements] = useState(DEFAULT_ELEMENTS);
+  const [hnu, setHnu] = useState("Al Kα (1486.6 eV)");
+  const [theta, setTheta] = useState(45);
+  const [results, setResults] = useState(null);
+
+  const addElement = () =>
+    setElements((p) => [...p, { id: nextId++, name: "", line: "", be: 0, area: 0, rsf: 1.0, isCarbon: false }]);
+
+  const removeElement = (id) => setElements((p) => p.filter((e) => e.id !== id));
+
+  const updateElement = (id, field, value) => {
+    if (field === "isCarbon" && value) {
+      setElements((p) => p.map((e) => ({ ...e, isCarbon: e.id === id })));
+    } else {
+      setElements((p) => p.map((e) => e.id === id ? { ...e, [field]: value } : e));
+    }
+  };
+
+  const calculate = useCallback(() => {
+    const hν = XRAY_ENERGIES[hnu];
+    const θ_rad = (theta * Math.PI) / 180;
+    const cosθ = Math.cos(θ_rad);
+    const sens = elements.map((e) => ({ ...e, ke: hν - e.be, normI: e.area / e.rsf }));
+    const totalNorm = sens.reduce((s, e) => s + e.normI, 0);
+    const withPct = sens.map((e) => ({ ...e, atomPct: (100 * e.normI) / totalNorm }));
+    const carbonEl = withPct.find((e) => e.isCarbon);
+    if (!carbonEl) { alert("Mark one element as adventitious carbon (C★)."); return; }
+    const x = carbonEl.atomPct;
+    const d = -LAMBDA_C1S_C * cosθ * Math.log(1 - x / 100);
+    const corrected = withPct.map((e) => {
+      if (e.isCarbon) return { ...e, lambda_i: null, correctedArea: null };
+      const λ_i = imfpOrganic(e.ke);
+      return { ...e, lambda_i: λ_i, correctedArea: e.area * Math.exp(d / (λ_i * cosθ)) };
+    });
+    const nonC = corrected.filter((e) => !e.isCarbon);
+    const totalCorrNorm = nonC.reduce((s, e) => s + e.correctedArea / e.rsf, 0);
+    const final = corrected.map((e) => {
+      if (e.isCarbon) return { ...e, correctedAtomPct: 0 };
+      return { ...e, correctedAtomPct: (100 * (e.correctedArea / e.rsf)) / totalCorrNorm };
+    });
+    setResults({ elements: final, d, x, theta, hnu });
+  }, [elements, hnu, theta]);
+
+  return (
+    <div style={S.root}>
+      {/* ── Header ── */}
+      <header style={S.header}>
+        <div style={S.headerBar} />
+        <div style={S.headerInner}>
+          <img src={`data:image/jpeg;base64,${LOGO_B64}`} alt="HarwellXPS" style={S.logo} />
+          <div>
+            <h1 style={S.title}>XPS Carbon Contamination Correction</h1>
+            <p style={S.subtitle}>
+              Adventitious hydrocarbon overlayer correction &nbsp;·&nbsp;
+              Smith (2005) &amp; Lea et al. (2010)
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <main style={S.main}>
+        {/* ── Section 01 ── */}
+        <Card label="01" title="Instrument Parameters">
+          <div style={S.paramGrid}>
+            <ParamGroup label="X-ray Source">
+              <select style={S.select} value={hnu} onChange={(e) => setHnu(e.target.value)}>
+                {Object.keys(XRAY_ENERGIES).map((k) => <option key={k}>{k}</option>)}
+              </select>
+            </ParamGroup>
+            <ParamGroup label="Emission Angle θ (°)" hint="relative to surface normal">
+              <input type="number" style={S.input} value={theta} min={0} max={89}
+                onChange={(e) => setTheta(parseFloat(e.target.value) || 0)} />
+            </ParamGroup>
+            <ParamGroup label="λ_C1s,C (nm)" hint="EAL of C1s in hydrocarbon overlayer — fixed">
+              <input style={{ ...S.input, ...S.ro }} value="3.5 nm  (Al Kα, Tanuma TPP-2M fit)" readOnly />
+            </ParamGroup>
+          </div>
+        </Card>
+
+        {/* ── Section 02 ── */}
+        <Card label="02" title="Spectral Peak Data">
+          <p style={S.cardDesc}>
+            Enter Shirley-background-subtracted peak areas, binding energies, and RSFs.
+            Select the C★ radio button for the adventitious carbon C 1s peak.
+          </p>
+          <div style={S.tableScroll}>
+            <table style={S.table}>
+              <thead>
+                <tr>
+                  {["C★","Element","Line","B.E. (eV)","Area (cts)","RSF",""].map((h,i) =>
+                    <th key={i} style={S.th}>{h}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {elements.map((el) => (
+                  <tr key={el.id} style={el.isCarbon ? S.cRow : S.row}>
+                    <td style={S.td}>
+                      <input type="radio" name="cp" checked={el.isCarbon} style={S.radio}
+                        onChange={() => updateElement(el.id, "isCarbon", true)} />
+                    </td>
+                    {[["name","e.g. O",false],["line","1s",false],["be","285",true],["area","0",true],["rsf","1.000",true]].map(([f,ph,num])=>(
+                      <td key={f} style={S.td}>
+                        <input type={num ? "number" : "text"} style={S.cellInput}
+                          value={el[f]} placeholder={ph} step={f==="rsf"?"0.001":undefined}
+                          onChange={(e)=>updateElement(el.id,f,num ? parseFloat(e.target.value)||0 : e.target.value)}/>
+                      </td>
+                    ))}
+                    <td style={S.td}>
+                      <button style={S.delBtn} onClick={() => removeElement(el.id)}>✕</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={S.tableActions}>
+            <button style={S.addBtn} onClick={addElement}>+ Add element</button>
+            <button style={S.calcBtn} onClick={calculate}>Calculate ▶</button>
+          </div>
+        </Card>
+
+        {/* ── Section 03 – Results ── */}
+        {results && (
+          <Card label="03" title="Correction Results">
+            {/* Key metrics */}
+            <div style={S.metricsRow}>
+              <Metric label="Apparent C concentration" value={`${fmt2(results.x)} at.%`} sub="RSF-normalised, before correction" />
+              <Metric label="Overlayer thickness  d" value={`${fmt3(results.d)} nm`} sub="d = −λ·cosθ·ln(1−x/100)" hl />
+              <Metric label="Emission angle" value={`${results.theta}°`} sub={`cosθ = ${fmt3(Math.cos(results.theta*Math.PI/180))}`} />
+              <Metric label="Photon energy" value={`${XRAY_ENERGIES[results.hnu]} eV`} sub={results.hnu} />
+            </div>
+
+            {/* Table */}
+            <div style={S.tableScroll}>
+              <table style={S.table}>
+                <thead>
+                  <tr>
+                    {["Element / Line","KE (eV)","λᵢ in overlayer (nm)","Apparent at.%","Corrected at.%","Δ (pp)"].map((h,i)=>
+                      <th key={i} style={S.th}>{h}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.elements.map((e) => {
+                    const delta = e.isCarbon ? null : e.correctedAtomPct - e.atomPct;
+                    return (
+                      <tr key={e.id} style={e.isCarbon ? S.cRow : S.row}>
+                        <td style={{ ...S.td, fontWeight: 700 }}>
+                          {e.name} {e.line}
+                          {e.isCarbon && <span style={S.badge}>C★</span>}
+                        </td>
+                        <td style={S.td}>{fmt2(e.ke)}</td>
+                        <td style={S.td}>{e.isCarbon ? "—" : fmt3(e.lambda_i)}</td>
+                        <td style={S.td}><span style={S.pct}>{fmt2(e.atomPct)}</span></td>
+                        <td style={S.td}>
+                          {e.isCarbon
+                            ? <span style={S.excl}>0.00 (excluded)</span>
+                            : <span style={S.corr}>{fmt2(e.correctedAtomPct)}</span>}
+                        </td>
+                        <td style={S.td}>
+                          {delta == null ? "—" : (
+                            <span style={{ color: delta >= 0 ? C.green : C.red, fontWeight: 600 }}>
+                              {delta >= 0 ? "+" : ""}{fmt2(delta)}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Equations */}
+            <div style={S.eqBox}>
+              <p style={S.eqTitle}>Equations Applied</p>
+              <div style={S.eqGrid}>
+                <Eq label="Overlayer thickness (Smith 2005, Eq. 4)"
+                  eq="d = −λ_C1s,C · cosθ · ln(1 − x/100)"
+                  note={`d = −${LAMBDA_C1S_C} × ${fmt3(Math.cos(results.theta*Math.PI/180))} × ln(1 − ${fmt2(results.x)}/100) = ${fmt3(results.d)} nm`} />
+                <Eq label="IMFP in organic overlayer (Tanuma TPP-2M fit)"
+                  eq="λᵢ = 0.016 × Eᵢ⁰·⁷⁶⁰⁸  [nm, E in eV]"
+                  note="Average over organic materials; λ_C1s,C = 3.5 nm for Al Kα" />
+                <Eq label="Attenuation correction (Smith 2005, Eq. 5)"
+                  eq="I_corr = I_meas · exp( d / (λᵢ · cosθ) )"
+                  note="Applied to all non-carbon elements; results renormalised to 100%" />
+                <Eq label="Nominal atom % (Seah 1990)"
+                  eq="at.% Xᵢ = 100 × (Iᵢ/Sᵢ) / Σ(Iⱼ/Sⱼ)"
+                  note="Standard RSF normalisation including all detected elements" />
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* ── References ── */}
+        <div style={S.ref}>
+          <strong>References: </strong>
+          Smith, G.C. (2005) <em>J. Electron Spectrosc. Relat. Phenom.</em> 148, 21–28 &nbsp;·&nbsp;
+          Lea, A.S. et al. (2010) <em>Surf. Interface Anal.</em> 42, 1061–1065 &nbsp;·&nbsp;
+          Tanuma, S., Powell, C.J. &amp; Penn, D.R. (1993) <em>Surf. Interface Anal.</em> 21, 165
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// ─── Sub-components ─────────────────────────────────────────────────────────
+function Card({ label, title, children }) {
+  return (
+    <section style={S.card}>
+      <h2 style={S.cardTitle}>
+        <span style={S.cardNum}>{label}</span>{title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+function ParamGroup({ label, hint, children }) {
+  return (
+    <div style={S.pg}>
+      <label style={S.lbl}>{label}{hint && <span style={S.hint}> — {hint}</span>}</label>
+      {children}
+    </div>
+  );
+}
+function Metric({ label, value, sub, hl }) {
+  return (
+    <div style={{ ...S.metric, ...(hl ? S.metricHL : {}) }}>
+      <div style={S.mv}>{value}</div>
+      <div style={S.ml}>{label}</div>
+      {sub && <div style={S.ms}>{sub}</div>}
+    </div>
+  );
+}
+function Eq({ label, eq, note }) {
+  return (
+    <div style={S.eqBlock}>
+      <div style={S.eqLbl}>{label}</div>
+      <code style={S.eqCode}>{eq}</code>
+      <div style={S.eqNote}>{note}</div>
+    </div>
+  );
+}
+
+// ─── Style tokens ────────────────────────────────────────────────────────────
+const S = {
+  root: { fontFamily: "'JetBrains Mono','Fira Code','Courier New',monospace", background: C.bg, minHeight:"100vh", color: C.text },
+  header: { background: `linear-gradient(135deg, #0e1218 0%, #0d1f2d 60%, #102a3a 100%)`, borderBottom: `1px solid ${C.tealDim}`, position:"relative", overflow:"hidden" },
+  headerBar: { position:"absolute", top:0, left:0, right:0, height:3, background:`linear-gradient(90deg, ${C.teal}, ${C.blue})` },
+  headerInner: { maxWidth:1080, margin:"0 auto", padding:"24px 32px", display:"flex", alignItems:"center", gap:20 },
+  logo: { height:64, width:64, borderRadius:10, objectFit:"contain", background:"#fff", padding:4, flexShrink:0 },
+  title: { margin:"0 0 4px", fontSize:22, fontWeight:700, letterSpacing:"0.03em", color:"#e8f4ff" },
+  subtitle: { margin:0, fontSize:10.5, color: C.textMid, letterSpacing:"0.08em", textTransform:"uppercase" },
+  main: { maxWidth:1080, margin:"0 auto", padding:"28px 32px 56px", display:"flex", flexDirection:"column", gap:20 },
+  card: { background: C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"24px 28px" },
+  cardTitle: { margin:"0 0 18px", fontSize:13, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"#cce8ff", display:"flex", alignItems:"center", gap:10 },
+  cardNum: { display:"inline-block", background:`linear-gradient(135deg,${C.teal},${C.blue})`, color:"#0e1218", borderRadius:4, padding:"2px 8px", fontSize:10, fontWeight:800 },
+  cardDesc: { margin:"-4px 0 16px", fontSize:11.5, color: C.textMid, lineHeight:1.7 },
+  paramGrid: { display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))", gap:18 },
+  pg: { display:"flex", flexDirection:"column", gap:5 },
+  lbl: { fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.07em", color: C.textMid },
+  hint: { fontWeight:400, textTransform:"none", letterSpacing:0, color: C.textDim },
+  input: { background:"#0a1018", border:`1px solid ${C.border}`, borderRadius:5, color: C.text, fontFamily:"inherit", fontSize:13, padding:"8px 12px", outline:"none" },
+  ro: { color: C.textDim, cursor:"default" },
+  select: { background:"#0a1018", border:`1px solid ${C.border}`, borderRadius:5, color: C.text, fontFamily:"inherit", fontSize:13, padding:"8px 12px", outline:"none", cursor:"pointer" },
+  tableScroll: { overflowX:"auto" },
+  table: { width:"100%", borderCollapse:"collapse", fontSize:12.5 },
+  th: { textAlign:"left", padding:"9px 12px", fontSize:9.5, fontWeight:700, letterSpacing:"0.09em", textTransform:"uppercase", color: C.textMid, borderBottom:`1px solid ${C.border}`, whiteSpace:"nowrap" },
+  td: { padding:"8px 12px", borderBottom:`1px solid #192230`, verticalAlign:"middle" },
+  row: {},
+  cRow: { background: C.accentBg },
+  cellInput: { background:"#0a1018", border:`1px solid #1e2d3e`, borderRadius:4, color: C.text, fontFamily:"inherit", fontSize:12, padding:"5px 8px", width:"88%", outline:"none" },
+  radio: { accentColor: C.teal, cursor:"pointer", width:16, height:16 },
+  delBtn: { background:"transparent", border:`1px solid ${C.border}`, borderRadius:4, color: C.red, cursor:"pointer", padding:"3px 8px", fontSize:11 },
+  tableActions: { display:"flex", gap:10, marginTop:14, justifyContent:"flex-end" },
+  addBtn: { background:"transparent", border:`1px solid ${C.border}`, borderRadius:5, color: C.textMid, cursor:"pointer", fontFamily:"inherit", fontSize:12, padding:"8px 16px" },
+  calcBtn: { background:`linear-gradient(135deg,${C.teal},${C.blue})`, border:"none", borderRadius:5, color:"#0e1218", cursor:"pointer", fontFamily:"inherit", fontSize:13, fontWeight:800, padding:"9px 22px", letterSpacing:"0.04em" },
+  metricsRow: { display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:14, marginBottom:22 },
+  metric: { background:"#0a1018", border:`1px solid ${C.border}`, borderRadius:7, padding:"14px 18px" },
+  metricHL: { border:`1px solid ${C.tealDim}`, background: C.accentBg },
+  mv: { fontSize:21, fontWeight:700, color:"#e0f4ff", letterSpacing:"0.02em", marginBottom:3 },
+  ml: { fontSize:10, fontWeight:700, color: C.textMid, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:3 },
+  ms: { fontSize:9.5, color: C.textDim, fontStyle:"italic" },
+  pct: { color: C.text },
+  corr: { color: C.accent, fontWeight:700 },
+  excl: { color: C.textDim, fontStyle:"italic" },
+  badge: { display:"inline-block", marginLeft:6, background:`linear-gradient(135deg,${C.teal},${C.blue})`, color:"#0e1218", borderRadius:3, fontSize:8, fontWeight:800, padding:"1px 5px", letterSpacing:"0.06em" },
+  eqBox: { marginTop:24, background:"#0a1018", border:`1px solid ${C.border}`, borderRadius:7, padding:"18px 22px" },
+  eqTitle: { margin:"0 0 14px", fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.09em", color: C.textMid },
+  eqGrid: { display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(210px,1fr))", gap:14 },
+  eqBlock: { borderLeft:`3px solid ${C.tealDim}`, paddingLeft:12 },
+  eqLbl: { fontSize:10, fontWeight:600, color: C.textMid, marginBottom:4, letterSpacing:"0.04em" },
+  eqCode: { display:"block", fontSize:10.5, color: C.blue, marginBottom:4, wordBreak:"break-all", lineHeight:1.5 },
+  eqNote: { fontSize:9.5, color: C.textDim, lineHeight:1.5 },
+  ref: { fontSize:11, color: C.textDim, lineHeight:1.8, padding:"0 4px" },
+};
